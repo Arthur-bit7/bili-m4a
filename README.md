@@ -1,1 +1,75 @@
-IyBCaWxpIE00QQoK5oqKIEIg56uZ6KeG6aKR6ZO+5o6l5Y+Y5oiQ5Y+v6K+V5ZCs44CB5Y+v5LiL6L2955qEIE00QSDnuq/pn7PpopHjgILkuIDkuKrlnKjoh6rlt7HnlLXohJHkuIrov5DooYznmoTlvIDmupDlsI/lt6XlhbfjgIIKCltHaXRIdWIg5LuT5bqTXShodHRwczovL2dpdGh1Yi5jb20vQXJ0aHVyLWJpdDcvYmlsaS1tNGEpIMK3IFvoh6rliqjljJbmtYvor5VdKGh0dHBzOi8vZ2l0aHViLmNvbS9BcnRodXItYml0Ny9iaWxpLW00YS9hY3Rpb25zKQoKIyMgV2luZG93cyDlvIDlp4vkvb/nlKgKCjEuIOWuieijhSAqKlB5dGhvbiAzLjEwIOaIluabtOaWsOeJiOacrCoq77yM5a6J6KOF5pe25Yu+6YCJICoqQWRkIFB5dGhvbiB0byBQQVRIKirjgIIKMi4g5bCG5pW05Liq6aG555uu6Kej5Y6L5Yiw5LiA5Liq5paH5Lu25aS577yM5Y+M5Ye7ICoqc3RhcnQuYmF0KirjgIIKMy4g6aaW5qyh5ZCv5Yqo5Lya6IGU572R5a6J6KOF5L6d6LWW77yb5a6M5oiQ5ZCO6Ieq5Yqo5omT5byAIDxodHRwOi8vMTI3LjAuMC4xOjg3NjU+44CCCjQuIOeymOi0tCBCIOermeinhumikemTvuaOpeaIliBCViDlj7fvvIzngrnlh7vigJzmj5Dlj5bpn7PpopHigJ3vvIznrYnlvoXlrozmiJDlkI7or5XlkKzmiJbngrnlh7vigJzkuIvovb0gTTRB4oCd44CCCgrov5DooYzmnJ/pl7Tkv53nlZnlkK/liqjnqpflj6PvvJvmjIkgYEN0cmwrQ2Ag5YGc5q2i5pyN5Yqh44CC5peg6ZyA5Y2V54us5a6J6KOFIEZGbXBlZ++8mmltYWdlaW8tZmZtcGVnIOWcqOW4uOingSBXaW5kb3dzL21hY09TL0xpbnV4IOW5s+WPsOmAmui/hyB3aGVlbCDmj5DkvpsgRkZtcGVn44CC5YW25LuW5p625p6E5Y+v6IO96ZyA6KaB5omL5Yqo5a6J6KOFIEZGbXBlZyDlubborr7nva4gYElNQUdFSU9fRkZNUEVHX0VYRWDjgIIKCiMjIG1hY09TIC8gTGludXggLyDmiYvliqjlkK/liqgKCmBgYHNoCnB5dGhvbiAtbSB2ZW52IC52ZW52CiMgbWFjT1MgLyBMaW51eApzb3VyY2UgLnZlbnYvYmluL2FjdGl2YXRlCiMgV2luZG93cyBQb3dlclNoZWxsIOWImeeUqCAudmVudlxTY3JpcHRzXEFjdGl2YXRlLnBzMQpweXRob24gLW0gcGlwIGluc3RhbGwgLXIgcmVxdWlyZW1lbnRzLnR4dApweXRob24gYXBwLnB5CmBgYAoK5LiN6Ieq5Yqo5byA5rWP6KeI5Zmo77yaYHB5dGhvbiBhcHAucHkgLS1uby1icm93c2VyYOOAguerr+WPo+iiq+WNoOeUqO+8mmBweXRob24gYXBwLnB5IC0tcG9ydCA4NzY2YOOAggoKIyMg6L6T5YWl5ZKM6L6T5Ye6CgotIOaUr+aMgSBgaHR0cHM6Ly93d3cuYmlsaWJpbGkuY29tL3ZpZGVvL0JWLi4uYOOAgWBhdi4uLmAg6KeG6aKR6ZO+5o6l44CB5a6M5pW0IEJWIOWPt+WSjCBgYjIzLnR2YCDliIbkuqvnn63pk77jgIIKLSDmlK/mjIHljIXlkKvpk77mjqXnmoTliIbkuqvmloflrZfjgIIKLSDmma7pgJrlpJogUCDmipXnqL/pu5jorqTlj6rlpITnkIbnrKwgMSBQ77yb6ZO+5o6l5Lit55qEIGA/cD0yYCDmjIflrprnrKwgMiBQ44CCCi0g56ys5LiA54mI6Z2i5ZCR5peg6ZyA55m75b2V55qE5pmu6YCa5YWs5byA6KeG6aKR77yb5LiN5o+Q5L6b55m75b2V44CB5Lya5ZGY5p2D6ZmQ57uV6L+H44CB55u05pKt44CB55Wq5Ymn5oiW5pW05Liq5ZCI6ZuG5om56YeP5LiL6L2944CCCi0g5LyY5YWI6YCJ5Y+WIEFBQyDpn7PovajvvIznm7TmjqXlsIHoo4UgTTRB77yM6YG/5YWN6YeN5aSN57yW56CB77yb5YW25LuW6Z+z6L2o6L2s5Li6IDE5MiBrYnBzIEFBQ++8iOi9rOeggeS4jeaEj+WRs+edgOaPkOWNh+a6kOmfs+i0qO+8ieOAguaegeWwkeaVsOWPquaciea3t+WQiOWqkuS9k+eahOiAgeinhumikemcgOimgeWFiOS4i+i9veWQq+eUu+mdoueahOa6kOaWh+S7tu+8jOacgOe7iOi+k+WHuuS7jeWPquS/neeVmemfs+mikeOAggotIOi+k+WHuuS7heWMheWQq+S4gOadoemfs+i9qO+8jOS4jea3u+WKoOinhumikeaIluWwgemdoui9qOOAguWFiOino+aekCBNNEEg5pe26ZW/5ZKM5aOw6YGT77yM5YaN55SxIEZGbXBlZyDlrozmlbTop6PnoIHvvJvpgJrov4fmoKHpqozlkI7miY3mmL7npLrkuIvovb3jgIIKLSDmlofku7bkv53lrZjlnKggYGRvd25sb2Fkcy885Lu75YqhSUQ+L2F1ZGlvLm00YWDvvIznvZHpobXkuIvovb3kvJrkvb/nlKjop4bpopHmoIfpopjkvZzkuLrmlofku7blkI3jgILkuLTml7bmupDmlofku7blpITnkIblkI7oh6rliqjliKDpmaTjgIIKLSDmnKzmrKHku7vliqHorrDlvZXkv53lrZjlnKjlhoXlrZjvvIzliLfmlrDpobXpnaLku43lj6/nnIvliLDvvIzph43lkK/nqIvluo/lkI7muIXnqbrvvJvnlJ/miJDmlofku7bkuI3kvJroh6rliqjliKDpmaTjgILlj6/lnKjlgZzmraLnqIvluo/lkI7miYvliqjmlbTnkIYgYGRvd25sb2Fkc2DjgIIKLSDljZXkuKrku7vliqHkuLLooYzmiafooYzvvIzmnIDlpJogNSDkuKrmnKrlrozmiJDku7vliqHvvIzkuIDmrKHov5DooYzmnIDlpJogMTAwIOadoeiusOW9leOAggoKIyMg5bi46KeB6Zeu6aKYCgoqKuino+aekOWksei0pSAvIDQxMiAvIDQwMyAvIOivt+axgui/h+Wkmioq77ya5YWI56Gu6K6k6KeG6aKR5ZyoIEIg56uZ6IO95q2j5bi45omT5byA77yM562J5b6F5LiA5q615pe26Ze05YaN6K+V44CC5bmz5Y+w5o6l5Y+j5oiW6aOO5o6n5Lya5Y+Y5YyW77yM5peg5rOV5L+d6K+B5Lu75oSP6KeG6aKR6YO96IO95LiL6L2944CCV2luZG93cyDlj6/lj4zlh7sgYHVwZGF0ZS5iYXRgIOabtOaWsOino+aekOWZqO+8m+aJi+WKqOabtOaWsO+8mgoKYGBgc2gKcHl0aG9uIC1tIHBpcCBpbnN0YWxsIC0tdXBncmFkZSAtciByZXF1aXJlbWVudHMudHh0CmBgYAoKKirpnIDopoHnmbvlvZUqKu+8mui/meS4gOeJiOS4jeivu+WPlua1j+iniOWZqCBDb29raWXjgIHkuI3kv53lrZjotKblj7fkv6Hmga/vvIzku4XmlK/mjIHml6DpnIDnmbvlvZXljbPlj6/ojrflj5bnmoTotYTmupDjgIIKCioq5ZCv5Yqo5ZCO5rKh5pyJ6Ieq5Yqo5byA572R6aG1KirvvJrmiYvliqjmiZPlvIDlkK/liqjnqpflj6PkuK3nmoTmnKzlnLDnvZHlnYDjgILpppbmrKHlronoo4XpnIDopoHnvZHnu5zvvIzkvp3otZbmiJbku6PnkIbpl67popjkvJrmmL7npLrlnKjnqpflj6PkuK3jgIIKCioq5Li65LuA5LmI5pivIE00QSDogIzpnZ4gTVAz77yfKiogTTRBIOaYr+WuueWZqO+8jOi+k+WHuumfs+mikeS9v+eUqCBBQUPvvIzlj6/lnKjlpJrmlbDmiYvmnLrjgIHnlLXohJHmkq3mlL7lmajkuK3mkq3mlL7vvJvnm7TmjqXlpI3liLYgQUFDIOWPr+S/neeVmea6kOmfs+i0qOOAggoKIyMg5byA5Y+RCgpgYGBzaApweXRob24gLW0gdW5pdHRlc3QgZGlzY292ZXIgLXMgdGVzdHMgLXYKYGBgCgrmtYvor5XkuI3or7fmsYIgQiDnq5nvvJropobnm5bpk77mjqXpqozor4HjgIHmjIflrprliIYgUOOAgeadg+mZkOajgOafpeOAgeS7u+WKoemUmeivr+OAgeS4i+i9veWPiiBSYW5nZSDor7fmsYLvvJvkvb/nlKjnnJ/lrp4gRkZtcGVnIOWQiOaIkOmfs+inhumikeagt+acrO+8jOajgOafpeaXoOinhumikei9qOOAgUFBQyDlpI3liLbjgIFXQVYg6L2sIEFBQyDlkozmjZ/lnY/mlofku7bmi5Lnu53jgILnvZHnu5zlkowgQiDnq5nlrp7mtYvor7fop4EgYFZBTElEQVRJT04ubWRg77yM5LiN6KaB5bCG56a757q/6YCa6L+H5b2T5L2c57q/5LiK5oiQ5Yqf44CCCgpgYGB0ZXh0CmFwcC5weSAgICAgICAgICAgICBGbGFzayBBUEnjgIHljZUgd29ya2VyIOmYn+WIl+OAgeacrOWcsOacjeWKoQpjb3JlLnB5ICAgICAgICAgICAg6ZO+5o6l5aSE55CG44CBeXQtZGxwIOS4i+i9veOAgUZGbXBlZyDovazmjaLlkozmoKHpqowKdGVtcGxhdGVzLyAgICAgICAgIOmhtemdogpzdGF0aWMvICAgICAgICAgICAg5qC35byP5ZKM5rWP6KeI5Zmo6ISa5pysCnRlc3RzLyAgICAgICAgICAgICDoh6rliqjljJbmtYvor5UKYGBgCgrpu5jorqTlj6rnm5HlkKwgYDEyNy4wLjAuMWDvvIzmoKHpqowgSG9zdCDlkozmj5DkuqTku6TniYzvvIzkuI3mmK/lj6/ku6Xnm7TmjqXmmrTpnLLliLDlhaznvZHnmoTmiZjnrqHkuIvovb3nq5njgILmsqHmnInnu5/orqHln4vngrnvvJvpn7Pop4bpopHor7fmsYLnlLHmnKzmnLrlj5HlvoAgQiDnq5nlj4rlhbYgQ0RO44CCCgrmnKzpobnnm67ku6PnoIHph4fnlKggTUlUIOiuuOWPr+ivge+8jOS+nei1luS/neeVmeWQhOiHquiuuOWPr+ivgeOAguWIhuWPkSBGRm1wZWcg5LqM6L+b5Yi25pe26ZyA5Y+m6KGM6YG15a6I5YW25YW35L2T5p6E5bu655qE6K645Y+v77yb5rqQ56CB5YyF5LiN5YyF5ZCr5LqM6L+b5Yi244CB6Jma5ouf546v5aKD44CBQ29va2llIOaIluS4i+i9vemfs+mikeOAguS7heWkhOeQhuS9oOacieadg+S4i+i9veeahOWGheWuueOAggoK5a6e546w5Y+C6ICD77yaW3l0LWRscCDlrpjmlrnmlofmoaNdKGh0dHBzOi8vZ2l0aHViLmNvbS95dC1kbHAveXQtZGxwI2VtYmVkZGluZy15dC1kbHAp44CBW0ZGbXBlZyDlrpjmlrnmlofmoaNdKGh0dHBzOi8vZmZtcGVnLm9yZy9mZm1wZWcuaHRtbCnjgIFbaW1hZ2Vpby1mZm1wZWddKGh0dHBzOi8vZ2l0aHViLmNvbS9pbWFnZWlvL2ltYWdlaW8tZmZtcGVnKeOAggo=
+# Bili M4A
+
+把 B 站视频链接变成可试听、可下载的 M4A 纯音频。一个在自己电脑上运行的开源小工具。
+
+[GitHub 仓库](https://github.com/Arthur-bit7/bili-m4a) · [自动化测试](https://github.com/Arthur-bit7/bili-m4a/actions)
+
+## Windows 开始使用
+
+1. 安装 **Python 3.10 或更新版本**，安装时勾选 **Add Python to PATH**。
+2. 将整个项目解压到一个文件夹，双击 **start.bat**。
+3. 首次启动会联网安装依赖；完成后自动打开 <http://127.0.0.1:8765>。
+4. 粘贴 B 站视频链接或 BV 号，点击“提取音频”，等待完成后试听或点击“下载 M4A”。
+
+运行期间保留启动窗口；按 `Ctrl+C` 停止服务。无需单独安装 FFmpeg：imageio-ffmpeg 在常见 Windows/macOS/Linux 平台通过 wheel 提供 FFmpeg。其他架构可能需要手动安装 FFmpeg 并设置 `IMAGEIO_FFMPEG_EXE`。
+
+## macOS / Linux / 手动启动
+
+```sh
+python -m venv .venv
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell 则用 .venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python app.py
+```
+
+不自动开浏览器：`python app.py --no-browser`。端口被占用：`python app.py --port 8766`。
+
+## 输入和输出
+
+- 支持 `https://www.bilibili.com/video/BV...`、`av...` 视频链接、完整 BV 号和 `b23.tv` 分享短链。
+- 支持包含链接的分享文字。
+- 普通多 P 投稿默认只处理第 1 P；链接中的 `?p=2` 指定第 2 P。
+- 第一版面向无需登录的普通公开视频；不提供登录、会员权限绕过、直播、番剧或整个合集批量下载。
+- 优先选取 AAC 音轨，直接封装 M4A，避免重复编码；其他音轨转为 192 kbps AAC（转码不意味着提升源音质）。极少数只有混合媒体的老视频需要先下载含画面的源文件，最终输出仍只保留音频。
+- 输出仅包含一条音轨，不添加视频或封面轨。先解析 M4A 时长和声道，再由 FFmpeg 完整解码；通过校验后才显示下载。
+- 文件保存在 `downloads/<任务ID>/audio.m4a`，网页下载会使用视频标题作为文件名。临时源文件处理后自动删除。
+- 本次任务记录保存在内存，刷新页面仍可看到，重启程序后清空；生成文件不会自动删除。可在停止程序后手动整理 `downloads`。
+- 单个任务串行执行，最多 5 个未完成任务，一次运行最多 100 条记录。
+
+## 常见问题
+
+**解析失败 / 412 / 403 / 请求过多**：先确认视频在 B 站能正常打开，等待一段时间再试。平台接口或风控会变化，无法保证任意视频都能下载。Windows 可双击 `update.bat` 更新解析器；手动更新：
+
+```sh
+python -m pip install --upgrade -r requirements.txt
+```
+
+**需要登录**：这一版不读取浏览器 Cookie、不保存账号信息，仅支持无需登录即可获取的资源。
+
+**启动后没有自动开网页**：手动打开启动窗口中的本地网址。首次安装需要网络，依赖或代理问题会显示在窗口中。
+
+**为什么是 M4A 而非 MP3？** M4A 是容器，输出音频使用 AAC，可在多数手机、电脑播放器中播放；直接复制 AAC 可保留源音质。
+
+## 开发
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+测试不请求 B 站：覆盖链接验证、指定分 P、权限检查、任务错误、下载及 Range 请求；使用真实 FFmpeg 合成音视频样本，检查无视频轨、AAC 复制、WAV 转 AAC 和损坏文件拒绝。网络和 B 站实测请见 `VALIDATION.md`，不要将离线通过当作线上成功。
+
+```text
+app.py             Flask API、单 worker 队列、本地服务
+core.py            链接处理、yt-dlp 下载、FFmpeg 转换和校验
+templates/         页面
+static/            样式和浏览器脚本
+tests/             自动化测试
+```
+
+默认只监听 `127.0.0.1`，校验 Host 和提交令牌，不是可以直接暴露到公网的托管下载站。没有统计埋点；音视频请求由本机发往 B 站及其 CDN。
+
+本项目代码采用 MIT 许可证，依赖保留各自许可证。分发 FFmpeg 二进制时需另行遵守其具体构建的许可；源码包不包含二进制、虚拟环境、Cookie 或下载音频。仅处理你有权下载的内容。
+
+实现参考：[yt-dlp 官方文档](https://github.com/yt-dlp/yt-dlp#embedding-yt-dlp)、[FFmpeg 官方文档](https://ffmpeg.org/ffmpeg.html)、[imageio-ffmpeg](https://github.com/imageio/imageio-ffmpeg)。

@@ -1,0 +1,5 @@
+Flask>=3.1,<4
+waitress>=3,<4
+yt-dlp>=2026.8.19
+imageio-ffmpeg>=0.6,<0.7
+mutagen>=1.47,<2

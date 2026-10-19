@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="app-token" content="{{ token }}">
+  <title>Bili M4A · 留下声音</title>
+  <link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/"><span class="mark">b.</span> Bili M4A</a><span class="local"><i></i> 在你的电脑上运行</span></header>
+  <main>
+    <section class="intro"><div class="eyebrow">BILIBILI → AUDIO</div><h1>喜欢的内容，<br>留下<span>声音。</span></h1><p>粘贴 B 站视频链接，提取成 M4A 音频。<br>讲座、访谈、自己的创作，随时听。</p></section>
+    <section class="workspace" aria-label="音频提取">
+      <form id="form"><div class="form-heading"><h2>从一个链接开始</h2><span class="format">.m4a</span></div>
+        <label for="url">B 站视频链接或 BV 号</label>
+        <textarea id="url" name="url" rows="2" maxlength="4096" placeholder="粘贴 bilibili.com / b23.tv 链接，也支持完整分享文字" required></textarea>
+        <div class="form-bottom"><span>支持指定分 P · 默认提取第 1 P</span><button id="submit" type="submit">提取音频 <span aria-hidden="true">↗</span></button></div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </form>
+      <div class="features"><span>◎ 只保留音轨</span><span>♫ 完成即可试听</span><span>↙ 保存到本机</span></div>
+    </section>
+    <section class="history"><div class="section-heading"><h2>本次提取</h2><span id="count">0 个任务</span></div><p id="connection" class="error" role="status" hidden></p><div id="jobs"></div><div id="empty"><div class="wave" aria-hidden="true">▂ ▅ ▃ █ ▆ ▃ ▅ ▂</div><h3>下一段声音，从这里开始</h3><p>提取进度、试听和下载会显示在这里。</p></div></section>
+    <aside class="note">音频保存在项目的 downloads 文件夹。网页记录在重启后清空，已生成的文件仍会保留。请仅处理你有权下载的内容。</aside>
+  </main><footer><span>Bili M4A <small> / v0.1.0</small></span><span>本地运行 · MIT 开源</span></footer>
+</body></html>
