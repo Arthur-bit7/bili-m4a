@@ -1,6 +1,7 @@
 """Exercise the actual CLI server lifecycle over localhost, without Bilibili."""
 import io
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -16,6 +17,11 @@ import zipfile
 
 class ServerExitTests(unittest.TestCase):
     def test_real_server_downloads_zip_cleans_only_this_run_and_exits(self):
+        for encoding in ('utf-8', 'cp936', 'cp1252'):
+            with self.subTest(encoding=encoding):
+                self.check_server_lifecycle(encoding)
+
+    def check_server_lifecycle(self, encoding):
         source = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -42,7 +48,8 @@ runpy.run_path('app.py', run_name='__main__')
                 port = sock.getsockname()[1]
             process = subprocess.Popen([sys.executable, str(launcher), '--no-browser', '--port', str(port)],
                                        cwd=root, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT, text=True, encoding='utf-8')
+                                       stderr=subprocess.STDOUT, text=True, encoding=encoding,
+                                       env={**os.environ, 'PYTHONIOENCODING': encoding})
             base = f'http://127.0.0.1:{port}'
             def get(path):
                 with urlopen(base + path, timeout=2) as response:
