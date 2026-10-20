@@ -94,7 +94,7 @@ class WebTests(unittest.TestCase):
 
     def test_download_and_range(self):
         def runner(url, folder, update):
-            folder.mkdir(parents=True)
+            folder.mkdir(parents=True, exist_ok=True)
             (folder / "audio.m4a").write_bytes(b"0123456789")
             return {"title":"测试", "filename":"测试.m4a", "duration":1, "size":10}
         self.setup_app(runner)
@@ -112,7 +112,7 @@ class WebTests(unittest.TestCase):
 
     def test_error_and_cleanup(self):
         def runner(url, folder, update):
-            folder.mkdir(parents=True)
+            folder.mkdir(parents=True, exist_ok=True)
             (folder / "partial.m4a").write_bytes(b"bad")
             raise AudioError("测试错误")
         self.setup_app(runner)

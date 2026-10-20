@@ -29,7 +29,7 @@ class BatchTests(unittest.TestCase):
 
     def runner(self, url, folder, update):
         self.seen.append(int(url.split('?p=')[1]))
-        folder.mkdir(parents=True)
+        folder.mkdir(parents=True, exist_ok=True)
         (folder / 'audio.m4a').write_bytes(b'audio')
         return {'title': '测试音频', 'filename': 'test.m4a', 'duration': 1, 'size': 5}
 

@@ -34,6 +34,18 @@
     <section class="history"><div class="section-heading"><h2>本次提取</h2><span id="count">0 个任务</span></div><p id="connection" class="error" role="status" hidden></p><p id="queue-status" class="video-status"></p><p id="queue-error" class="error" role="alert" hidden></p>
       <div id="player-panel" class="player-panel" hidden><p id="player-title"></p><audio id="player" controls preload="none" aria-label="音频试听"></audio></div>
       <div id="jobs"></div><div id="empty"><div class="wave" aria-hidden="true">▂ ▅ ▃ █ ▆ ▃ ▅ ▂</div><h3>下一段声音，从这里开始</h3><p>提取进度、试听和下载会显示在这里。</p></div></section>
-    <aside class="note">音频保存在项目的 downloads 文件夹。关闭程序将中止队列，网页记录在重启后清空；已结束批次最多保留 500 条任务记录，已生成的文件仍会保留。请仅处理你有权下载的内容。</aside>
+    <aside class="note">音频保存在项目的 downloads 文件夹。本次生成的音频为临时缓存，请先下载需要保留的文件。通过“退出并清理缓存”或 Ctrl+C 正常退出时，仅删除本次运行生成的文件，旧文件保留。请仅处理你有权下载的内容。</aside>
+    <section class="session-controls" aria-label="退出程序">
+      <p>关闭网页不会停止任务或清理缓存。需要保留的音频，请先下载。</p>
+      <button id="exit-button" type="button" class="secondary">退出并清理缓存</button>
+      <p id="session-status" role="status" aria-live="polite"></p>
+      <p id="exit-error" class="error" role="alert" hidden></p>
+    </section>
+    <dialog id="exit-dialog" aria-labelledby="exit-title">
+      <h2 id="exit-title">退出并清理本次缓存？</h2>
+      <p id="exit-details"></p>
+      <p>请确认需要保留的音频已另存。清理后，本次生成的音频无法再次试听或下载；旧缓存和浏览器另存的文件不受影响。</p>
+      <div class="dialog-actions"><button id="exit-cancel" type="button" class="secondary">继续使用</button><button id="exit-confirm" type="button">确认退出并清理</button></div>
+    </dialog>
   </main><footer><span>Bili M4A <small> / v0.1.0</small></span><span>本地运行 · MIT 开源</span></footer>
 </body></html>

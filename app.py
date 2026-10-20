@@ -5,15 +5,17 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 import argparse
 import secrets
-import shutil
 import threading
+import time
+import zipfile
 import uuid
 import webbrowser
 
 from flask import Flask, abort, jsonify, render_template, request, send_file
-from waitress import serve
+from waitress import create_server
 
-from core import AudioError, extract_audio, inspect_video, normalize_url
+from core import AudioError, extract_audio, inspect_video, normalize_url, safe_filename
+from session import MediaResponse, RunSession, SessionClosing
 
 ROOT = Path(__file__).resolve().parent
 TERMINAL = {"done", "error", "cancelled"}
@@ -27,7 +29,9 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
     app.config["MAX_CONTENT_LENGTH"] = 16384
     app.config["MAX_HISTORY"] = MAX_HISTORY
     token = secrets.token_urlsafe(32)
-    data_dir = Path(data_dir or ROOT / "downloads")
+    session = RunSession(data_dir or ROOT / "downloads")
+    data_dir = session.root
+    app.extensions["audio_session"] = session
     jobs = {}
     batches = {}
     lock = threading.Lock()
@@ -55,6 +59,8 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
 
     @app.post("/api/video")
     def video_info():
+        if session.status()["phase"] != "running":
+            return jsonify(error="程序正在退出，无法解析新链接。"), 503
         body = request.get_json(silent=True)
         try:
             url = normalize_url(body.get("url") if isinstance(body, dict) else None)
@@ -65,6 +71,44 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
             return jsonify(error=str(exc)), 502
         except Exception:
             return jsonify(error="读取视频信息失败，请稍后点击获取重试。"), 502
+
+    def finish_shutdown():
+        try:
+            pool.shutdown(wait=True, cancel_futures=True)
+            session.cleanup()
+            print("本次运行缓存已清理，旧文件保留。", flush=True)
+            callback = app.extensions.get("audio_stop_server")
+            if callback:
+                callback()
+        except Exception as exc:
+            session.fail("清理未完成，未删除的缓存仍保留。请检查磁盘或文件占用后重试。")
+            app.logger.exception("Session cleanup failed: %s", exc)
+
+    def start_shutdown():
+        with lock:
+            if not session.begin_shutdown():
+                return
+            for job in jobs.values():
+                if job["status"] == "queued":
+                    job.update(status="cancelled", progress=None, message="退出程序，已取消等待")
+        threading.Thread(target=finish_shutdown, name="cleanup", daemon=True).start()
+
+    app.extensions["audio_shutdown"] = start_shutdown
+
+    @app.get("/api/session")
+    def session_status():
+        with lock:
+            result = session.status()
+            result["pending"] = sum(job["status"] not in TERMINAL for job in jobs.values())
+            return jsonify(result)
+
+    @app.post("/api/shutdown")
+    def shutdown():
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or body.get("confirmed") is not True:
+            return jsonify(error="请确认已保存需要保留的音频，再退出并清理本次缓存。"), 400
+        start_shutdown()
+        return jsonify(phase=session.status()["phase"]), 202
 
     @app.get("/api/jobs")
     def list_jobs():
@@ -109,11 +153,15 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
                 jobs[job_id].update(values)
 
         try:
+            session.create_folder(job_id)
             result = runner(url, folder, update)
             update(**result, status="done", progress=100, message="音频已就绪", download=f"/audio/{job_id}")
         except Exception as exc:
             # Finish cleanup before publishing the terminal state.
-            shutil.rmtree(folder, ignore_errors=True)
+            try:
+                session.remove_folder(folder)
+            except OSError:
+                app.logger.exception("Failed to remove task cache")
             update(status="error", progress=None, message=str(exc) if isinstance(exc, (AudioError, ValueError)) else "处理失败，请检查磁盘空间后重试。")
         finally:
             with lock:
@@ -144,6 +192,8 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
         except ValueError as exc:
             return jsonify(error=str(exc)), 400
         with lock:
+            if session.status()["phase"] != "running":
+                return jsonify(error="程序正在退出，无法提交新任务。"), 503
             remaining = MAX_PENDING - sum(job["status"] not in TERMINAL for job in jobs.values())
             if len(urls) > remaining:
                 return jsonify(error=f"队列还可容纳 {remaining} 个任务，请减少选择或等待任务完成。"), 429
@@ -190,17 +240,71 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
                 abort(404)
             return jsonify(cancelled=cancel_queued(batches[batch_id]["ids"]))
 
+    def media_response(path, release, **options):
+        try:
+            response = send_file(path, **options)
+            if request.method == "HEAD" or response.status_code == 304:
+                response.close()
+                release()
+            else:
+                response.response = MediaResponse(response.response, release)
+            return response
+        except BaseException:
+            release()
+            raise
+
+    @app.errorhandler(SessionClosing)
+    def closing_error(error):
+        return jsonify(error=str(error)), 503
+
+    @app.get("/api/batches/<batch_id>/zip")
+    def batch_zip(batch_id):
+        release = session.acquire()
+        try:
+            with lock:
+                batch = batches.get(batch_id)
+                if not batch:
+                    abort(404)
+                snapshot = [dict(jobs[job_id]) for job_id in batch["ids"] if jobs[job_id]["status"] == "done"]
+                title = batch["title"]
+            if not snapshot:
+                release()
+                return jsonify(error="当前批次还没有已完成的音频。"), 409
+            folder = session.create_folder("zip-" + uuid.uuid4().hex)
+            archive = folder / "audio.zip"
+            # AAC is already compressed; store entries without another costly
+            # compression pass. The snapshot excludes queued/failed/cancelled jobs.
+            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as output:
+                for job in sorted(snapshot, key=lambda entry: entry["page"]):
+                    source = data_dir / job["id"] / "audio.m4a"
+                    output.write(source, f"P{job['page']:03d}_{safe_filename(job['title'])}")
+            name = safe_filename(title)[:-4] + f"_{len(snapshot)}个音频.zip"
+        except (OSError, zipfile.BadZipFile):
+            release()
+            return jsonify(error="打包失败，请检查磁盘空间后重试。"), 500
+        except BaseException:
+            release()
+            raise
+        # An empty snapshot returns above without a file iterator to close.
+        return media_response(archive, release, mimetype="application/zip", as_attachment=True,
+                              download_name=name, conditional=True)
+
     @app.get("/audio/<job_id>")
     def audio(job_id):
-        with lock:
-            job = dict(jobs.get(job_id, {}))
-        if job.get("status") != "done":
-            abort(404)
-        path = data_dir / job_id / "audio.m4a"
-        if not path.is_file():
-            abort(404)
-        return send_file(path, mimetype="audio/mp4", as_attachment=request.args.get("download") == "1",
-                         download_name=job["filename"], conditional=True)
+        release = session.acquire()
+        try:
+            with lock:
+                job = dict(jobs.get(job_id, {}))
+            if job.get("status") != "done":
+                abort(404)
+            path = data_dir / job_id / "audio.m4a"
+            if not path.is_file():
+                abort(404)
+        except BaseException:
+            release()
+            raise
+        return media_response(path, release, mimetype="audio/mp4", as_attachment=request.args.get("download") == "1",
+                              download_name=job["filename"], conditional=True)
 
     return app
 
@@ -215,7 +319,26 @@ if __name__ == "__main__":
     print(f"Bili M4A: {url}\nPress Ctrl+C to stop.", flush=True)
     if not args.no_browser:
         threading.Timer(1.2, lambda: webbrowser.open(url)).start()
-    try:
-        serve(app, host="127.0.0.1", port=args.port, threads=4)
-    finally:
-        app.extensions["audio_pool"].shutdown(wait=False, cancel_futures=True)
+    stop_server = threading.Event()
+    app.extensions["audio_stop_server"] = stop_server.set
+    server = create_server(app, host="127.0.0.1", port=args.port, threads=4)
+    server_thread = threading.Thread(target=server.run, name="http", daemon=True)
+    server_thread.start()
+    while not stop_server.is_set():
+        try:
+            stop_server.wait(.2)
+        except KeyboardInterrupt:
+            print("正在退出：取消等待任务，等待当前提取和传输结束后清理本次缓存。", flush=True)
+            app.extensions["audio_shutdown"]()
+    # Allow the page to read the final cleanup status before closing HTTP.
+    time.sleep(1)
+    server.accepting = False
+    for channel in list(server.active_channels.values()):
+        channel.close_when_flushed = True
+    # WSGI iterators can finish before their buffered bytes reach the socket.
+    # Keep the HTTP loop alive until those existing channels have drained.
+    while server.active_channels:
+        time.sleep(.1)
+    server.task_dispatcher.shutdown()
+    server.asyncore.close_all(server._map)
+    server_thread.join(timeout=2)

@@ -40,3 +40,14 @@
 #selected-count{margin-bottom:0}
 
 .pagination[hidden]{display:none}
+
+.batch-heading{flex-wrap:wrap}
+.batch-heading h3{flex:1 1 240px}
+.batch-download{font-size:12px;padding:9px 12px}
+.session-controls{border-top:1px solid #e1e6dc;padding:18px 0 30px;margin-top:24px;font-size:12px;color:#778275;line-height:1.8}
+#session-status{overflow-wrap:anywhere}
+#exit-dialog{max-width:480px;width:calc(100% - 40px);border:1px solid #dce5d7;border-radius:16px;padding:26px;color:#22372d;background:#fff}
+#exit-dialog::backdrop{background:#1f352d66}
+#exit-dialog p{font-size:13px;line-height:1.9;color:#677868}
+.dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
+[inert]{opacity:.65}

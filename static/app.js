@@ -6,6 +6,8 @@ const labels = {queued:'排队中', extracting:'解析中', downloading:'下载�
 const batchCards = new Map();
 const batchPages = new Map();
 let playingJob = null;
+let exiting = false;
+let sessionClosed = false;
 function text(tag, value, className) {
   const node = document.createElement(tag); node.textContent = value;
   if (className) node.className = className;
@@ -24,6 +26,7 @@ async function cancel(url) {
   catch (error) { showError(error, '#queue-error'); }
 }
 function play(job) {
+  if (exiting) return;
   $('#player-panel').hidden = false;
   $('#player-title').textContent = job.title;
   if (playingJob !== job.id) { $('#player').src = job.download; playingJob = job.id; }
@@ -75,6 +78,11 @@ function renderBatch(batch, card) {
   const queued = batch.jobs.filter(job => job.status === 'queued').length;
   if (queued) heading.append(button('取消等待中的任务', () => cancel(`/api/batches/${batch.id}/cancel`)));
   const done = batch.jobs.filter(job => job.status === 'done').length;
+  if (done) {
+    const zip = text('a', `下载已完成音频（${done}）`, 'download batch-download');
+    zip.href = `/api/batches/${batch.id}/zip`; zip.title = '将当前已完成的音频打包为 ZIP';
+    heading.append(zip);
+  }
   const failed = batch.jobs.filter(job => job.status === 'error').length;
   const cancelled = batch.jobs.filter(job => job.status === 'cancelled').length;
   const active = batch.jobs.find(job => !terminal.has(job.status) && job.status !== 'queued');
@@ -131,7 +139,7 @@ async function refresh() {
     const response = await fetch('/api/batches'); if (!response.ok) throw Error();
     render(await response.json()); $('#connection').hidden = true;
   } catch {
-    $('#connection').textContent = '暂时无法连接本地服务，请确认启动窗口仍在运行。'; $('#connection').hidden = false;
+    if (!exiting) { $('#connection').textContent = '暂时无法连接本地服务，请确认启动窗口仍在运行。'; $('#connection').hidden = false; }
   }
 }
 
@@ -159,7 +167,7 @@ function updateSubmit() {
   $('#select-page').indeterminate = local > 0 && local < visible.length;
   $('#select-page').disabled = !visible.length || submitting;
   $('#submit').textContent = submitting ? '正在提交…' : expanded ? `提取所选 ${selected.size} 个分 P ↗` : '获取音频 ↗';
-  $('#submit').disabled = submitting || (expanded && (!selected.size || selected.size > MAX_BATCH));
+  $('#submit').disabled = exiting || submitting || (expanded && (!selected.size || selected.size > MAX_BATCH));
   // Freeze selection while submitting so a successful request cannot clear edits
   // made after its payload was captured. The source URL may still be replaced.
   $('#part-search').disabled = submitting;
@@ -286,7 +294,7 @@ $('#url').addEventListener('input', event => {
   debounce = setTimeout(() => { inspectVideo().catch(() => {}); }, event.inputType === 'insertFromPaste' ? 0 : 600);
 });
 $('#form').addEventListener('submit', async event => {
-  event.preventDefault(); if (submitting || (expanded && (!selected.size || selected.size > MAX_BATCH))) return;
+  event.preventDefault(); if (exiting || submitting || (expanded && (!selected.size || selected.size > MAX_BATCH))) return;
   clearTimeout(debounce); const current = revision;
   submitting = true; updateSubmit(); $('#error').hidden = true;
   try {
@@ -308,5 +316,68 @@ $('#form').addEventListener('submit', async event => {
     if (current === revision) showError(error);
   } finally { submitting = false; updateSubmit(); }
 });
-async function poll() { await refresh(); setTimeout(poll, 1200); }
+function stopPlayback() {
+  $('#player').pause(); $('#player').removeAttribute('src'); $('#player').load();
+  $('#player-panel').hidden = true; playingJob = null;
+}
+function lockSession() {
+  if (!exiting) {
+    exiting = true; revision++; clearTimeout(debounce);
+    if (controller) controller.abort();
+    stopPlayback();
+  }
+  $('#form').inert = true; $('#jobs').inert = true;
+  $('#submit').disabled = true; $('#exit-button').disabled = true;
+}
+function applySession(state) {
+  if (state.phase === 'running') return;
+  lockSession(); $('#connection').hidden = true;
+  if (state.phase === 'closed') {
+    sessionClosed = true;
+    $('#session-status').textContent = '本次缓存已清理，程序已退出。旧文件和浏览器另存的文件均保留。';
+    $('#exit-button').textContent = '已退出';
+  } else if (state.phase === 'error') {
+    $('#session-status').textContent = state.error;
+    $('#exit-button').textContent = '重试退出清理'; $('#exit-button').disabled = false;
+  } else if (state.phase === 'cleaning') {
+    $('#session-status').textContent = '正在清理本次运行生成的缓存…';
+  } else {
+    $('#session-status').textContent = `正在退出：等待 ${state.pending} 个提取任务、${state.transfers} 个打包或传输请求结束后清理。`;
+  }
+}
+async function readSession() {
+  const response = await fetch('/api/session'); if (!response.ok) throw Error('无法读取程序状态，请重试。');
+  return response.json();
+}
+async function refreshSession() {
+  try { applySession(await readSession()); }
+  catch {
+    if (exiting && !sessionClosed) $('#session-status').textContent = '等待退出结果；若服务已断开，请查看启动窗口确认清理结果。';
+  }
+}
+$('#exit-button').addEventListener('click', async () => {
+  $('#exit-error').hidden = true;
+  try {
+    const state = await readSession();
+    if (state.phase !== 'running' && state.phase !== 'error') { applySession(state); return; }
+    const playing = playingJob && !$('#player').paused;
+    $('#exit-details').textContent = `当前有 ${state.pending} 个未完成任务、${state.transfers} 个打包或传输请求${playing ? '，正在试听音频' : ''}。退出将停止试听、取消等待任务，等待正在处理和传输的文件结束后清理。`;
+    $('#exit-dialog').showModal();
+  } catch (error) { showError(error, '#exit-error'); }
+});
+$('#exit-cancel').addEventListener('click', () => $('#exit-dialog').close());
+$('#exit-confirm').addEventListener('click', async () => {
+  $('#exit-confirm').disabled = true; $('#exit-error').hidden = true;
+  try {
+    await postJson('/api/shutdown', {confirmed: true});
+    $('#exit-dialog').close(); lockSession();
+    await refreshSession();
+  } catch (error) { $('#exit-dialog').close(); showError(error, '#exit-error'); }
+  finally { $('#exit-confirm').disabled = false; }
+});
+async function poll() {
+  if (sessionClosed) return;
+  await Promise.all([refresh(), refreshSession()]);
+  if (!sessionClosed) setTimeout(poll, exiting ? 400 : 1200);
+}
 poll();

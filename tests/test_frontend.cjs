@@ -8,7 +8,7 @@ const path = require('node:path');
 class Element {
   constructor(tag='div') {
     this.tagName=tag;this.children=[];this.listeners={};this.dataset={};this.value='';
-    this.hidden=false;this.disabled=false;this.textContent='';this.attributes={};this.playCalls=0;
+    this.hidden=false;this.disabled=false;this.textContent='';this.attributes={};this.playCalls=0;this.paused=true;
   }
   addEventListener(name, fn) { this.listeners[name]=fn; }
   append(...nodes) { for(const node of nodes) this.insertBefore(node,null); }
@@ -22,7 +22,12 @@ class Element {
   querySelectorAll(selector) {
     return this.children.flatMap(child => [ ...(selector === 'input' && child.tagName === 'input' ? [child] : []), ...child.querySelectorAll(selector) ]);
   }
-  play() { this.playCalls++;return Promise.resolve(); }
+  play() { this.playCalls++;this.paused=false;return Promise.resolve(); }
+  pause() { this.paused=true; }
+  removeAttribute(name) { delete this.attributes[name];if(name==='src')this.src=''; }
+  load() { this.paused=true; }
+  showModal() { this.open=true; }
+  close() { this.open=false; }
 }
 const deferred = () => { let resolve;const promise=new Promise(r => resolve=r);return {promise,resolve}; };
 const result = (body,ok=true) => ({ok,json:async () => body});
@@ -30,9 +35,9 @@ const info = (pages=2,selected=1) => ({title:'课程',selected_page:selected,par
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function setup() {
   const ids=['empty','count','jobs','connection','form','submit','error','url','parts','part-list','video-title','video-status',
-    'queue-error','queue-status','player-panel','player-title','player','selected-count','part-search','parts-page','parts-prev','parts-next','select-page','select-all','clear-selection','parts-jump','selection-limit'];
+    'queue-error','queue-status','player-panel','player-title','player','selected-count','part-search','parts-page','parts-prev','parts-next','select-page','select-all','clear-selection','parts-jump','selection-limit','exit-button','exit-error','exit-details','exit-dialog','exit-cancel','exit-confirm','session-status'];
   const elements=Object.fromEntries(ids.map(id => [id,new Element()]));
-  const calls=[];const replies=[];const timers=new Map();let timerId=0;let batches=[];
+  const calls=[];const replies=[];const timers=new Map();let timerId=0;let batches=[];let session={phase:'running',pending:0,transfers:0};
   const document={createElement:tag => new Element(tag),querySelector(selector){
     if(selector.startsWith('#'))return elements[selector.slice(1)];
     if(selector.startsWith('meta'))return {content:'token'};
@@ -42,6 +47,7 @@ function setup() {
     setTimeout:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id),
     fetch:async(url,options)=>{
       if(url==='/api/batches'&&!options)return result(batches);
+      if(url==='/api/session'&&!options)return result(session);
       calls.push({url,body:JSON.parse(options.body),signal:options.signal});
       const reply=replies.shift();if(!reply)throw Error('Missing test response');return reply.promise||reply;
     }
@@ -56,7 +62,9 @@ function setup() {
     jump(page){elements['parts-jump'].value=String(page);elements['parts-jump'].listeners.change();},
     select(page,checked=true){const row=elements['part-list'].children.find(row=>Number(row.children[0]?.value)===page);assert.ok(row);row.children[0].checked=checked;row.children[0].listeners.change();},
     search(query){elements['part-search'].value=query;elements['part-search'].listeners.input();},
-    async batches(value){batches=value;await vm.runInContext('refresh()',context);}
+    async batches(value){batches=value;await vm.runInContext('refresh()',context);},
+    setSession(value){session=value;},
+    async session(value){session=value;await vm.runInContext('refreshSession()',context);}
   };
 }
 const visiblePages = ui => ui.elements['part-list'].children.filter(row=>row.children[0]?.type==='checkbox').map(row=>Number(row.children[0].value));
@@ -186,4 +194,43 @@ test('cancel controls target queued jobs and batches',async()=>{
   assert.equal(ui.calls[0].url,'/api/jobs/job1/cancel');
   ui.replies.push(result({cancelled:1}));await card.children[0].children[1].listeners.click();
   assert.equal(ui.calls[1].url,'/api/batches/batch/cancel');
+});
+
+
+test('batch ZIP link reflects only successful completed items',async()=>{
+  const ui=setup();const value=batch();value.jobs[0].status='error';value.jobs[1].status='queued';
+  await ui.batches([value]);const links=ui.elements.jobs.children[0].heading.children.filter(node=>node.tagName==='a');
+  assert.equal(links.length,1);assert.equal(links[0].textContent,'下载已完成音频（10）');
+  assert.equal(links[0].href,'/api/batches/batch/zip');
+});
+
+test('exit dialog reports activity; cancelling leaves playback and session untouched',async()=>{
+  const ui=setup();await ui.batches([batch()]);const card=ui.elements.jobs.children[0];
+  await card.rows.children[0].children[0].children[1].children[0].listeners.click();
+  ui.setSession({phase:'running',pending:4,transfers:2});await ui.click('exit-button');
+  assert.equal(ui.elements['exit-dialog'].open,true);
+  assert.ok(ui.elements['exit-details'].textContent.includes('4 个未完成任务'));
+  assert.ok(ui.elements['exit-details'].textContent.includes('正在试听'));
+  await ui.click('exit-cancel');assert.equal(ui.elements['exit-dialog'].open,false);
+  assert.equal(ui.elements.player.paused,false);assert.equal(ui.calls.length,0);
+});
+
+test('confirmed exit stops playback, disables operations and shows actual cleanup result',async()=>{
+  const ui=setup();await ui.batches([batch()]);const card=ui.elements.jobs.children[0];
+  await card.rows.children[0].children[0].children[1].children[0].listeners.click();
+  await ui.click('exit-button');ui.setSession({phase:'stopping',pending:1,transfers:2});
+  ui.replies.push(result({phase:'stopping'}));await ui.click('exit-confirm');
+  assert.equal(ui.calls[0].url,'/api/shutdown');assert.deepEqual(ui.calls[0].body,{confirmed:true});
+  assert.equal(ui.elements.player.paused,true);assert.equal(ui.elements.player.src,'');
+  assert.equal(ui.elements.jobs.inert,true);assert.equal(ui.elements.form.inert,true);assert.equal(ui.elements.submit.disabled,true);
+  assert.ok(ui.elements['session-status'].textContent.includes('等待 1 个提取任务'));
+  await ui.session({phase:'closed',pending:0,transfers:0});
+  assert.ok(ui.elements['session-status'].textContent.includes('本次缓存已清理'));assert.equal(ui.elements['exit-button'].textContent,'已退出');
+});
+
+test('cleanup error is visible and offers a retry without reopening extraction',async()=>{
+  const ui=setup();await ui.session({phase:'error',pending:0,transfers:0,error:'文件被占用，清理失败'});
+  assert.equal(ui.elements['session-status'].textContent,'文件被占用，清理失败');
+  assert.equal(ui.elements['exit-button'].disabled,false);assert.equal(ui.elements['exit-button'].textContent,'重试退出清理');
+  assert.equal(ui.elements.submit.disabled,true);
 });
