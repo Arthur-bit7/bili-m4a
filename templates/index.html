@@ -14,12 +14,38 @@
       <form id="form"><div class="form-heading"><h2>从一个链接开始</h2><span class="format">.m4a</span></div>
         <label for="url">B 站视频链接或 BV 号</label>
         <textarea id="url" name="url" rows="2" maxlength="4096" placeholder="粘贴 bilibili.com / b23.tv 链接，也支持完整分享文字" required></textarea>
-        <div class="form-bottom"><span>支持指定分 P · 默认提取第 1 P</span><button id="submit" type="submit">提取音频 <span aria-hidden="true">↗</span></button></div>
+        <p id="video-status" class="video-status" role="status" aria-live="polite">粘贴链接后自动识别分 P</p>
+        <fieldset id="parts" hidden>
+          <legend>选择分 P</legend>
+          <p id="video-title"></p>
+          <label for="part-search">搜索分 P 编号或标题</label>
+          <input id="part-search" type="search" placeholder="编号或标题" autocomplete="off">
+          <div class="selection-actions"><label class="select-page-label"><input id="select-page" type="checkbox">本页全选</label><button id="select-all" type="button" class="secondary">选择全部</button><button id="clear-selection" type="button" class="secondary">清空全部选择</button></div>
+          <div id="part-list"></div>
+          <nav class="pagination" aria-label="分 P 选择分页"><button id="parts-prev" type="button" class="secondary">上一页</button><label class="page-jump">第 <select id="parts-jump" aria-label="分 P 选择页码"></select><span id="parts-page"></span></label><button id="parts-next" type="button" class="secondary">下一页</button></nav>
+          <p id="selected-count" class="video-status" role="status">已选 0 个（本页 0 个）</p>
+          <p id="selection-limit" class="error" role="status" hidden></p>
+        </fieldset>
+        <div class="form-bottom"><span>每批最多 50 个 · 按分 P 顺序提取</span><button id="submit" type="submit">获取音频 ↗</button></div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
       <div class="features"><span>◎ 只保留音轨</span><span>♫ 完成即可试听</span><span>↙ 保存到本机</span></div>
     </section>
-    <section class="history"><div class="section-heading"><h2>本次提取</h2><span id="count">0 个任务</span></div><p id="connection" class="error" role="status" hidden></p><div id="jobs"></div><div id="empty"><div class="wave" aria-hidden="true">▂ ▅ ▃ █ ▆ ▃ ▅ ▂</div><h3>下一段声音，从这里开始</h3><p>提取进度、试听和下载会显示在这里。</p></div></section>
-    <aside class="note">音频保存在项目的 downloads 文件夹。网页记录在重启后清空，已生成的文件仍会保留。请仅处理你有权下载的内容。</aside>
+    <section class="history"><div class="section-heading"><h2>本次提取</h2><span id="count">0 个任务</span></div><p id="connection" class="error" role="status" hidden></p><p id="queue-status" class="video-status"></p><p id="queue-error" class="error" role="alert" hidden></p>
+      <div id="player-panel" class="player-panel" hidden><p id="player-title"></p><audio id="player" controls preload="none" aria-label="音频试听"></audio></div>
+      <div id="jobs"></div><div id="empty"><div class="wave" aria-hidden="true">▂ ▅ ▃ █ ▆ ▃ ▅ ▂</div><h3>下一段声音，从这里开始</h3><p>提取进度、试听和下载会显示在这里。</p></div></section>
+    <aside class="note">音频保存在项目的 downloads 文件夹。本次生成的音频为临时缓存，请先下载需要保留的文件。通过“退出并清理缓存”或 Ctrl+C 正常退出时，仅删除本次运行生成的文件，旧文件保留。请仅处理你有权下载的内容。</aside>
+    <section class="session-controls" aria-label="退出程序">
+      <p>关闭网页不会停止任务或清理缓存。需要保留的音频，请先下载。</p>
+      <button id="exit-button" type="button" class="secondary">退出并清理缓存</button>
+      <p id="session-status" role="status" aria-live="polite"></p>
+      <p id="exit-error" class="error" role="alert" hidden></p>
+    </section>
+    <dialog id="exit-dialog" aria-labelledby="exit-title">
+      <h2 id="exit-title">退出并清理本次缓存？</h2>
+      <p id="exit-details"></p>
+      <p>请确认需要保留的音频已另存。清理后，本次生成的音频无法再次试听或下载；旧缓存和浏览器另存的文件不受影响。</p>
+      <div class="dialog-actions"><button id="exit-cancel" type="button" class="secondary">继续使用</button><button id="exit-confirm" type="button">确认退出并清理</button></div>
+    </dialog>
   </main><footer><span>Bili M4A <small> / v0.1.0</small></span><span>本地运行 · MIT 开源</span></footer>
 </body></html>
