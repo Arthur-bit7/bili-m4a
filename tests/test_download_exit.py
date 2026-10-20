@@ -190,6 +190,8 @@ class DownloadExitTests(unittest.TestCase):
 
     def test_cleanup_failure_is_reported_and_can_be_retried(self):
         self.make_app()
+        stopped = threading.Event()
+        self.app.extensions['audio_stop_server'] = stopped.set
         batch = self.submit((1,))
         self.wait_jobs(lambda jobs: jobs and jobs[0]['status'] == 'done')
         with patch.object(self.session, 'remove_folder', side_effect=PermissionError('locked')):
@@ -197,10 +199,24 @@ class DownloadExitTests(unittest.TestCase):
                 self.shutdown()
                 self.assertTrue(self.session.finished.wait(2))
         self.assertEqual(self.session.status()['phase'], 'error')
+        self.assertFalse(stopped.is_set())
         self.assertTrue((self.root / batch['id']).exists())
         self.shutdown()
-        self.assertTrue(self.session.finished.wait(2))
+        self.assertTrue(stopped.wait(2))
         self.assertEqual(self.session.status()['phase'], 'closed')
+
+    def test_broken_console_does_not_prevent_cleanup_or_server_stop(self):
+        self.make_app()
+        batch = self.submit((1,))
+        self.wait_jobs(lambda jobs: jobs and jobs[0]['status'] == 'done')
+        stopped = threading.Event()
+        self.app.extensions['audio_stop_server'] = stopped.set
+        with patch('app.print', side_effect=BrokenPipeError('closed pipe'), create=True):
+            self.shutdown()
+            self.assertTrue(stopped.wait(2))
+        self.assertEqual(self.session.status()['phase'], 'closed')
+        self.assertFalse((self.root / batch['id']).exists())
+        self.assertEqual((self.root / 'old-task' / 'audio.m4a').read_bytes(), b'old audio')
 
     def test_existing_directory_collision_is_never_owned_or_deleted(self):
         self.make_app()

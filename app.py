@@ -24,6 +24,16 @@ MAX_PENDING = 100
 MAX_HISTORY = 500
 
 
+def console_status(message):
+    """Console diagnostics must never prevent startup or graceful shutdown."""
+    try:
+        print(message, flush=True)
+    except (UnicodeError, OSError, ValueError):
+        # Redirected Windows output may reject Chinese text; a pipe or stream
+        # may also be closed. Cleanup and the stop signal must still run.
+        pass
+
+
 def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 16384
@@ -76,7 +86,7 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
         try:
             pool.shutdown(wait=True, cancel_futures=True)
             session.cleanup()
-            print("本次运行缓存已清理，旧文件保留。", flush=True)
+            console_status("本次运行缓存已清理，旧文件保留。")
             callback = app.extensions.get("audio_stop_server")
             if callback:
                 callback()
@@ -316,7 +326,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     app = create_app()
     url = f"http://127.0.0.1:{args.port}"
-    print(f"Bili M4A: {url}\nPress Ctrl+C to stop.", flush=True)
+    console_status(f"Bili M4A: {url}\nPress Ctrl+C to stop.")
     if not args.no_browser:
         threading.Timer(1.2, lambda: webbrowser.open(url)).start()
     stop_server = threading.Event()
@@ -328,7 +338,7 @@ if __name__ == "__main__":
         try:
             stop_server.wait(.2)
         except KeyboardInterrupt:
-            print("正在退出：取消等待任务，等待当前提取和传输结束后清理本次缓存。", flush=True)
+            console_status("正在退出：取消等待任务，等待当前提取和传输结束后清理本次缓存。")
             app.extensions["audio_shutdown"]()
     # Allow the page to read the final cleanup status before closing HTTP.
     time.sleep(1)
