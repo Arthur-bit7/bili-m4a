@@ -14,7 +14,13 @@
       <form id="form"><div class="form-heading"><h2>从一个链接开始</h2><span class="format">.m4a</span></div>
         <label for="url">B 站视频链接或 BV 号</label>
         <textarea id="url" name="url" rows="2" maxlength="4096" placeholder="粘贴 bilibili.com / b23.tv 链接，也支持完整分享文字" required></textarea>
-        <div class="form-bottom"><span>支持指定分 P · 默认提取第 1 P</span><button id="submit" type="submit">提取音频 <span aria-hidden="true">↗</span></button></div>
+        <p id="video-status" class="video-status" role="status" aria-live="polite">粘贴链接后自动识别分 P</p>
+        <fieldset id="parts" hidden>
+          <legend>选择一个分 P</legend>
+          <p id="video-title"></p>
+          <div id="part-list"></div>
+        </fieldset>
+        <div class="form-bottom"><span>单 P 直接提取 · 多 P 可单选下载</span><button id="submit" type="submit">获取音频 ↗</button></div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>
       <div class="features"><span>◎ 只保留音轨</span><span>♫ 完成即可试听</span><span>↙ 保存到本机</span></div>

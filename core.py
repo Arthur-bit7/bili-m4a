@@ -1,9 +1,12 @@
 """Bilibili extraction and verified, audio-only M4A output."""
 from pathlib import Path
+import json
 import re
 import subprocess
 import tempfile
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+from urllib.error import HTTPError, URLError
 
 import imageio_ffmpeg
 from mutagen.mp4 import MP4
@@ -88,6 +91,56 @@ class QuietLogger:
 
     def error(self, message):
         pass
+
+
+class VideoRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        # Reject redirects outside supported video/share URLs before following.
+        normalize_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def inspect_video(text):
+    """Read the video's complete page list without downloading media."""
+    url = normalize_url(text)
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.bilibili.com/"}
+    try:
+        if urlsplit(url).hostname == "b23.tv":
+            with build_opener(VideoRedirectHandler()).open(Request(url, headers=headers), timeout=20) as response:
+                url = normalize_url(response.geturl())
+            if urlsplit(url).hostname == "b23.tv":
+                raise AudioError("短链未跳转到普通视频，请复制完整视频链接重试。")
+        parsed = urlsplit(url)
+        video_id = parsed.path.rstrip("/").split("/")[-1]
+        query = {"bvid": video_id} if video_id.startswith("BV") else {"aid": video_id[2:]}
+        endpoint = "https://api.bilibili.com/x/web-interface/view?" + urlencode(query)
+        with urlopen(Request(endpoint, headers=headers), timeout=20) as response:
+            payload = json.load(response)
+        if payload.get("code") != 0:
+            if payload.get("code") in (-352, -412, -799, -509):
+                raise AudioError("B 站暂时限制了请求，请稍后再试。")
+            raise AudioError("无法读取视频信息，视频可能不可用或需要额外权限。")
+        data = payload.get("data") or {}
+        if (data.get("rights") or {}).get("is_stein_gate"):
+            raise AudioError("暂不支持互动视频，请使用普通投稿视频链接。")
+        bvid = data.get("bvid", "")
+        if not re.fullmatch(r"BV[0-9A-Za-z]{10}", bvid):
+            raise AudioError("没有获取到有效的视频信息，请重试。")
+        base = "https://www.bilibili.com/video/" + bvid
+        parts = [{"page": page["page"], "title": page.get("part") or f"第 {page['page']} P",
+                  "url": f"{base}?p={page['page']}"} for page in data.get("pages", [])]
+        if not parts:
+            raise AudioError("没有获取到分 P 信息，请重试。")
+        selected = int(parse_qs(parsed.query).get("p", ["1"])[0])
+        if selected not in [part["page"] for part in parts]:
+            raise AudioError("链接指定的分 P 不存在，请修改链接后重试。")
+        return {"title": data.get("title") or "B 站视频", "parts": parts, "selected_page": selected}
+    except HTTPError as exc:
+        raise AudioError("读取视频信息失败，B 站可能限制了请求，请稍后重试。") from exc
+    except (URLError, TimeoutError, OSError) as exc:
+        raise AudioError("无法连接 B 站，请检查网络后点击获取重试。") from exc
+    except (KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise AudioError("视频信息格式异常，请稍后重试。") from exc
 
 
 def extract_audio(url, folder, update):

@@ -9,7 +9,7 @@
 1. 安装 **Python 3.10 或更新版本**，安装时勾选 **Add Python to PATH**。
 2. 将整个项目解压到一个文件夹，双击 **start.bat**。
 3. 首次启动会联网安装依赖；完成后自动打开 <http://127.0.0.1:8765>。
-4. 粘贴 B 站视频链接或 BV 号，点击“提取音频”，等待完成后试听或点击“下载 M4A”。
+4. 粘贴 B 站视频链接或 BV 号，点击“获取音频”；多 P 视频先选择一个分 P，再点击“提取所选分 P”。完成后可试听或点击“下载 M4A”。
 
 运行期间保留启动窗口；按 `Ctrl+C` 停止服务。无需单独安装 FFmpeg：imageio-ffmpeg 在常见 Windows/macOS/Linux 平台通过 wheel 提供 FFmpeg。其他架构可能需要手动安装 FFmpeg 并设置 `IMAGEIO_FFMPEG_EXE`。
 
@@ -30,7 +30,7 @@ python app.py
 
 - 支持 `https://www.bilibili.com/video/BV...`、`av...` 视频链接、完整 BV 号和 `b23.tv` 分享短链。
 - 支持包含链接的分享文字。
-- 普通多 P 投稿默认只处理第 1 P；链接中的 `?p=2` 指定第 2 P。
+- 粘贴链接后自动识别分 P；多 P 视频支持在界面单选提取。默认选中第 1 P，链接中的 `?p=2` 会默认选中第 2 P。
 - 第一版面向无需登录的普通公开视频；不提供登录、会员权限绕过、直播、番剧或整个合集批量下载。
 - 优先选取 AAC 音轨，直接封装 M4A，避免重复编码；其他音轨转为 192 kbps AAC（转码不意味着提升源音质）。极少数只有混合媒体的老视频需要先下载含画面的源文件，最终输出仍只保留音频。
 - 输出仅包含一条音轨，不添加视频或封面轨。先解析 M4A 时长和声道，再由 FFmpeg 完整解码；通过校验后才显示下载。
@@ -57,6 +57,8 @@ python -m pip install --upgrade -r requirements.txt
 ```sh
 python -m unittest discover -s tests -v
 ```
+
+前端交互测试（需要 Node.js 18+）：`node --test tests/test_frontend.cjs`。
 
 测试不请求 B 站：覆盖链接验证、指定分 P、权限检查、任务错误、下载及 Range 请求；使用真实 FFmpeg 合成音视频样本，检查无视频轨、AAC 复制、WAV 转 AAC 和损坏文件拒绝。网络和 B 站实测请见 `VALIDATION.md`，不要将离线通过当作线上成功。
 

@@ -12,12 +12,12 @@ import webbrowser
 from flask import Flask, abort, jsonify, render_template, request, send_file
 from waitress import serve
 
-from core import AudioError, extract_audio, normalize_url
+from core import AudioError, extract_audio, inspect_video, normalize_url
 
 ROOT = Path(__file__).resolve().parent
 
 
-def create_app(data_dir=None, runner=extract_audio):
+def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = 8192
     token = secrets.token_urlsafe(32)
@@ -45,6 +45,19 @@ def create_app(data_dir=None, runner=extract_audio):
     @app.get("/")
     def index():
         return render_template("index.html", token=token)
+
+    @app.post("/api/video")
+    def video_info():
+        body = request.get_json(silent=True)
+        try:
+            url = normalize_url(body.get("url") if isinstance(body, dict) else None)
+            return jsonify(inspector(url))
+        except ValueError as exc:
+            return jsonify(error=str(exc)), 400
+        except AudioError as exc:
+            return jsonify(error=str(exc)), 502
+        except Exception:
+            return jsonify(error="读取视频信息失败，请稍后点击获取重试。"), 502
 
     @app.get("/api/jobs")
     def list_jobs():
