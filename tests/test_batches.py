@@ -27,13 +27,13 @@ class BatchTests(unittest.TestCase):
         self.app.extensions['audio_pool'].shutdown(wait=True)
         self.temp.cleanup()
 
-    def runner(self, url, folder, update):
+    def runner(self, url, folder, update, volume_percent=100):
         self.seen.append(int(url.split('?p=')[1]))
         folder.mkdir(parents=True, exist_ok=True)
         (folder / 'audio.m4a').write_bytes(b'audio')
         return {'title': '测试音频', 'filename': 'test.m4a', 'duration': 1, 'size': 5}
 
-    def blocking_runner(self, url, folder, update):
+    def blocking_runner(self, url, folder, update, volume_percent=100):
         self.started.set()
         if not self.release.wait(5):
             raise RuntimeError('test worker timed out')
@@ -57,7 +57,7 @@ class BatchTests(unittest.TestCase):
         active = 0
         maximum = 0
         lock = threading.Lock()
-        def runner(url, folder, update):
+        def runner(url, folder, update, volume_percent=100):
             nonlocal active, maximum
             with lock:
                 active += 1

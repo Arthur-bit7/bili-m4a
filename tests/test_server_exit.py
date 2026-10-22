@@ -36,7 +36,7 @@ class ServerExitTests(unittest.TestCase):
             launcher.write_text('''import core
 import runpy
 
-def runner(url, folder, update):
+def runner(url, folder, update, volume_percent=100):
     (folder / 'audio.m4a').write_bytes(b'sample audio')
     return {'title': 'sample', 'filename': 'sample.m4a', 'duration': 1, 'size': 12}
 

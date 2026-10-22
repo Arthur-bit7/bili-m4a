@@ -26,6 +26,11 @@
           <p id="selected-count" class="video-status" role="status">已选 0 个（本页 0 个）</p>
           <p id="selection-limit" class="error" role="status" hidden></p>
         </fieldset>
+        <div class="volume-control">
+          <label for="volume-percent">输出音量（%）</label>
+          <input id="volume-percent" name="volume_percent" type="number" min="25" max="400" step="1" value="100" required aria-describedby="volume-help">
+          <p id="volume-help" class="video-status">100% 保持原音量；声音偏小可先试 200%。支持 25%–400%，对本批所有分 P 生效。调整音量会重新编码并限制峰值，下载文件也会改变。</p>
+        </div>
         <div class="form-bottom"><span>每批最多 50 个 · 按分 P 顺序提取</span><button id="submit" type="submit">获取音频 ↗</button></div>
         <p id="error" class="error" role="alert" hidden></p>
       </form>

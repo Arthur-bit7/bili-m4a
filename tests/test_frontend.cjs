@@ -34,9 +34,10 @@ const result = (body,ok=true) => ({ok,json:async () => body});
 const info = (pages=2,selected=1) => ({title:'课程',selected_page:selected,parts:Array.from({length:pages},(_,i) => ({page:i+1,title:`章节 ${i+1}`,url:`https://www.bilibili.com/video/BV1bK411W797?p=${i+1}`}))});
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function setup() {
-  const ids=['empty','count','jobs','connection','form','submit','error','url','parts','part-list','video-title','video-status',
+  const ids=['volume-percent','empty','count','jobs','connection','form','submit','error','url','parts','part-list','video-title','video-status',
     'queue-error','queue-status','player-panel','player-title','player','selected-count','part-search','parts-page','parts-prev','parts-next','select-page','select-all','clear-selection','parts-jump','selection-limit','exit-button','exit-error','exit-details','exit-dialog','exit-cancel','exit-confirm','session-status'];
   const elements=Object.fromEntries(ids.map(id => [id,new Element()]));
+  elements['volume-percent'].value='100';
   const calls=[];const replies=[];const timers=new Map();let timerId=0;let batches=[];let session={phase:'running',pending:0,transfers:0};
   const document={createElement:tag => new Element(tag),querySelector(selector){
     if(selector.startsWith('#'))return elements[selector.slice(1)];
@@ -83,6 +84,34 @@ test('preview stays collapsed; multiple selected parts submit in one batch',asyn
 test('single page submits directly and clears input',async()=>{
   const ui=setup();ui.input('BV1bK411W797');ui.replies.push(result(info(1)),result({id:'job'}));await ui.submit();
   assert.equal(ui.calls.length,2);assert.equal(ui.elements.url.value,'');assert.equal(ui.elements.parts.hidden,true);
+  assert.equal(ui.calls[1].body.volume_percent,100);
+});
+
+test('volume is captured for the batch and stays selected for the next submission',async()=>{
+  const ui=setup();await open(ui,3);ui.select(2);ui.elements['volume-percent'].value='200';
+  const response=deferred();ui.replies.push(response);const submitting=ui.submit();await tick();
+  assert.equal(ui.elements['volume-percent'].disabled,true);
+  assert.equal(ui.calls[1].body.volume_percent,200);assert.equal(ui.calls[1].body.urls.length,2);
+  response.resolve(result({ids:['one','two']}));await submitting;
+  assert.equal(ui.elements['volume-percent'].disabled,false);assert.equal(ui.elements['volume-percent'].value,'200');
+  ui.elements['volume-percent'].value='50';ui.select(3);ui.replies.push(result({id:'three'}));await ui.submit();
+  assert.equal(ui.calls[2].body.volume_percent,50);
+});
+
+test('invalid volume prevents submission and reports how to fix it',async()=>{
+  for(const value of ['', '0', '401', '100.5', 'oops']){
+    const ui=setup();ui.input('BV1bK411W797');ui.elements['volume-percent'].value=value;await ui.submit();
+    assert.equal(ui.calls.length,0);assert.equal(ui.elements.error.hidden,false);
+    assert.match(ui.elements.error.textContent,/25–400/);assert.equal(ui.elements['volume-percent'].disabled,false);
+  }
+});
+
+test('completed rows show the volume used for the downloadable file',async()=>{
+  const ui=setup();await ui.batches([{id:'batch',title:'sample',created:'12:00',total:1,jobs:[
+    {id:'job',page:1,title:'sample',status:'done',duration:1,size:100,download:'/audio/job',volume_percent:200}
+  ]}]);
+  const row=ui.elements.jobs.children[0].rows.children[0];
+  assert.match(row.children[1].textContent,/音量 200%/);
 });
 
 test('selection pages contain five items and preserve checks across search and direct jumps',async()=>{
