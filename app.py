@@ -14,7 +14,7 @@ import webbrowser
 from flask import Flask, abort, jsonify, render_template, request, send_file
 from waitress import create_server
 
-from core import AudioError, extract_audio, inspect_video, normalize_url, safe_filename
+from core import AudioError, extract_audio, inspect_video, normalize_url, safe_filename, validate_volume
 from session import MediaResponse, RunSession, SessionClosing
 
 ROOT = Path(__file__).resolve().parent
@@ -149,7 +149,7 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
                                "created": batch["created"], "jobs": entries})
             return jsonify(result)
 
-    def execute(job_id, url):
+    def execute(job_id, url, volume_percent):
         with lock:
             if jobs.get(job_id, {}).get("status") != "queued":
                 return
@@ -164,7 +164,7 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
 
         try:
             session.create_folder(job_id)
-            result = runner(url, folder, update)
+            result = runner(url, folder, update, volume_percent)
             update(**result, status="done", progress=100, message="音频已就绪", download=f"/audio/{job_id}")
         except Exception as exc:
             # Finish cleanup before publishing the terminal state.
@@ -183,6 +183,7 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
         try:
             if not isinstance(body, dict):
                 raise ValueError("请提交视频链接。")
+            volume_percent = validate_volume(body.get("volume_percent", 100))
             raw = body.get("urls") if "urls" in body else [body.get("url")]
             if not isinstance(raw, list) or not raw:
                 raise ValueError("请至少选择一个分 P。")
@@ -216,13 +217,13 @@ def create_app(data_dir=None, runner=extract_audio, inspector=inspect_video):
                 page = int(parse_qs(urlsplit(url).query).get("p", ["1"])[0])
                 ids.append(job_id)
                 jobs[job_id] = {"id": job_id, "batch_id": batch_id, "page": page,
-                                "url": url, "title": title, "status": "queued",
+                                "url": url, "title": title, "status": "queued", "volume_percent": volume_percent,
                                 "progress": None, "message": "等待处理…", "created": created}
             batches[batch_id] = {"id": batch_id, "title": title, "created": created, "ids": ids}
             # Submission also happens under lock to keep concurrent batches from
             # interleaving their page order in the single-worker executor.
             for job_id, url in zip(ids, urls):
-                pool.submit(execute, job_id, url)
+                pool.submit(execute, job_id, url, volume_percent)
         return jsonify(id=ids[0], ids=ids, batch_id=batch_id), 202
 
     def cancel_queued(ids):

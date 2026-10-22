@@ -42,7 +42,7 @@ class DownloadExitTests(unittest.TestCase):
                 self.session.finished.wait(3)
         self.temp.cleanup()
 
-    def runner(self, url, folder, update):
+    def runner(self, url, folder, update, volume_percent=100):
         page = int(url.split('?p=')[1])
         (folder / 'audio.m4a').write_bytes(f'audio-{page}'.encode())
         return {'title': '../相同\\标题:测试', 'filename': 'test.m4a', 'duration': 1, 'size': 7}
@@ -68,7 +68,7 @@ class DownloadExitTests(unittest.TestCase):
         return response
 
     def test_zip_snapshot_sorts_and_excludes_failures_and_waiting(self):
-        def runner(url, folder, update):
+        def runner(url, folder, update, volume_percent=100):
             if url.endswith('?p=2'):
                 raise AudioError('failed')
             if url.endswith('?p=4'):
@@ -111,7 +111,7 @@ class DownloadExitTests(unittest.TestCase):
         self.assertTrue(self.session.finished.wait(2))
 
     def test_empty_and_missing_zip_requests_release_leases(self):
-        def blocked(url, folder, update):
+        def blocked(url, folder, update, volume_percent=100):
             self.started.set()
             self.release.wait(5)
             return self.runner(url, folder, update)
@@ -168,7 +168,7 @@ class DownloadExitTests(unittest.TestCase):
         self.assertTrue(all(not path.exists() for path in owned))
 
     def test_exit_cancels_queued_waits_for_active_and_rejects_new_tasks(self):
-        def blocked(url, folder, update):
+        def blocked(url, folder, update, volume_percent=100):
             self.started.set()
             self.release.wait(5)
             return self.runner(url, folder, update)
