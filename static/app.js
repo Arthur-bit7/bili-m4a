@@ -103,7 +103,7 @@ function renderBatch(batch, card) {
     const detail = job.status === 'done'
       ? `${Math.floor(job.duration / 60)}:${String(Math.floor(job.duration % 60)).padStart(2, '0')} · ${(job.size / 1048576).toFixed(1)} MB`
       : job.message;
-    row.append(text('p', `${labels[job.status]} · ${detail}`));
+    row.append(text('p', `${labels[job.status]} · ${detail} · 音量 ${job.volume_percent ?? 100}%`));
     if (!terminal.has(job.status)) {
       const progress = document.createElement('progress'); progress.max = 100;
       if (job.progress !== null) progress.value = job.progress;
@@ -171,6 +171,7 @@ function updateSubmit() {
   // Freeze selection while submitting so a successful request cannot clear edits
   // made after its payload was captured. The source URL may still be replaced.
   $('#part-search').disabled = submitting;
+  $('#volume-percent').disabled = submitting || exiting;
   $('#select-all').disabled = submitting;
   $('#clear-selection').disabled = submitting;
   $('#parts-jump').disabled = submitting;
@@ -296,15 +297,17 @@ $('#url').addEventListener('input', event => {
 $('#form').addEventListener('submit', async event => {
   event.preventDefault(); if (exiting || submitting || (expanded && (!selected.size || selected.size > MAX_BATCH))) return;
   clearTimeout(debounce); const current = revision;
+  const volumePercent = Number($('#volume-percent').value);
   submitting = true; updateSubmit(); $('#error').hidden = true;
   try {
+    if (!Number.isInteger(volumePercent) || volumePercent < 25 || volumePercent > 400) throw Error('输出音量必须是 25–400 之间的整数百分比。');
     const info = await inspectVideo();
     if (!info || current !== revision) return;
     if (info.parts.length > 1 && !expanded) { showParts(info); return; }
     const chosen = info.parts.length === 1 ? info.parts : info.parts.filter(part => selected.has(part.page));
     if (!chosen.length) throw Error('请至少选择一个分 P。');
     if (chosen.length > MAX_BATCH) throw Error('每批最多选择 50 个分 P，请减少选择后分批提交。');
-    await postJson('/api/jobs', {urls: chosen.map(part => part.url), title: info.title});
+    await postJson('/api/jobs', {urls: chosen.map(part => part.url), title: info.title, volume_percent: volumePercent});
     if (current !== revision) { await refresh(); return; }
     if (info.parts.length === 1) { $('#url').value = ''; resetVideo(); }
     else {

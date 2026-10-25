@@ -68,9 +68,19 @@ def verify_m4a(path):
         raise AudioError("生成的文件未通过 M4A 校验，请重试。") from exc
 
 
-def convert_audio(source, destination, codec, title="", uploader=""):
+def validate_volume(value):
+    if type(value) is not int or not 25 <= value <= 400:
+        raise ValueError("输出音量必须是 25–400 之间的整数百分比。")
+    return value
+
+
+def convert_audio(source, destination, codec, title="", uploader="", volume_percent=100):
+    volume_percent = validate_volume(volume_percent)
     # Explicit mapping excludes video, subtitles and artwork tracks.
-    codec_args = ["-c:a", "copy"] if codec.startswith(("mp4a", "aac")) else ["-c:a", "aac", "-b:a", "192k"]
+    codec_args = ["-c:a", "copy"] if volume_percent == 100 and codec.startswith(("mp4a", "aac")) else ["-c:a", "aac", "-b:a", "192k"]
+    if volume_percent != 100:
+        # Disable automatic makeup gain; compensate the limiter's lookahead.
+        codec_args += ["-af", f"volume={volume_percent / 100:g},alimiter=limit=0.95:level=false:latency=true"]
     ffmpeg(["-v", "error", "-y", "-i", str(source), "-map", "0:a:0", "-vn", "-sn", "-dn",
             "-map_metadata", "-1", *codec_args, "-metadata", f"title={title}",
             "-metadata", f"artist={uploader}", "-movflags", "+faststart", "-f", "ipod", str(destination)])
@@ -143,7 +153,8 @@ def inspect_video(text):
         raise AudioError("视频信息格式异常，请稍后重试。") from exc
 
 
-def extract_audio(url, folder, update):
+def extract_audio(url, folder, update, volume_percent=100):
+    volume_percent = validate_volume(volume_percent)
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=True)
     destination = folder / "audio.m4a"
@@ -182,8 +193,9 @@ def extract_audio(url, folder, update):
             if not source.is_file():
                 raise AudioError("未找到下载文件，视频可能不可用。")
             title = info.get("title") or info.get("id") or "B站音频"
-            update(status="converting", title=title, progress=None, message="正在生成 M4A 并检查可播放性…")
-            details = convert_audio(source, destination, info.get("acodec") or "", title, info.get("uploader") or "")
+            message = "正在生成 M4A 并检查可播放性…" if volume_percent == 100 else f"正在调整音量至 {volume_percent}% 并校验 M4A…"
+            update(status="converting", title=title, progress=None, message=message)
+            details = convert_audio(source, destination, info.get("acodec") or "", title, info.get("uploader") or "", volume_percent)
             return {**details, "title": title, "filename": safe_filename(title)}
     except DownloadError as exc:
         message = str(exc).lower()

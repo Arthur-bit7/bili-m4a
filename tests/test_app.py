@@ -93,7 +93,7 @@ class WebTests(unittest.TestCase):
         self.assertEqual(self.client.get("/audio/unknown").status_code, 404)
 
     def test_download_and_range(self):
-        def runner(url, folder, update):
+        def runner(url, folder, update, volume_percent=100):
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "audio.m4a").write_bytes(b"0123456789")
             return {"title":"测试", "filename":"测试.m4a", "duration":1, "size":10}
@@ -111,7 +111,7 @@ class WebTests(unittest.TestCase):
         response.close()
 
     def test_error_and_cleanup(self):
-        def runner(url, folder, update):
+        def runner(url, folder, update, volume_percent=100):
             folder.mkdir(parents=True, exist_ok=True)
             (folder / "partial.m4a").write_bytes(b"bad")
             raise AudioError("测试错误")

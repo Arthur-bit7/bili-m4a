@@ -51,3 +51,7 @@
 #exit-dialog p{font-size:13px;line-height:1.9;color:#677868}
 .dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
 [inert]{opacity:.65}
+
+.volume-control{margin-top:20px}
+#volume-percent{width:110px;max-width:100%;font:inherit;font-size:14px;padding:10px 12px;border:1px solid #e0e5da;border-radius:8px;background:#f9faf7;color:inherit}
+#volume-help{margin:8px 0 0}
